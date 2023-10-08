@@ -1,6 +1,7 @@
 {
   "name": "todoist",
   "version": "0.1.0",
+  "homepage": "https://aninaga.github.io/todo-webapp",
   "private": true,
   "dependencies": {
     "firebase": "^7.24.0",
@@ -23,9 +24,12 @@
     "eslint-plugin-prettier": "^3.1.4",
     "eslint-plugin-react": "^7.20.0",
     "eslint-plugin-react-hooks": "^4.0.4",
+    "gh-pages": "^6.0.0",
     "prettier": "^2.0.5"
   },
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --watchAll",
