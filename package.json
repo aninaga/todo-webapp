@@ -1,7 +1,7 @@
 {
   "name": "todoist",
   "version": "0.1.0",
-  "homepage": "https://aninaga.github.io/todo-webapp",
+  "homepage": "https://aninaga.github.io/todo-webapp/",
   "private": true,
   "dependencies": {
     "firebase": "^7.24.0",
@@ -28,9 +28,9 @@
     "prettier": "^2.0.5"
   },
   "scripts": {
+    "start": "react-scripts start",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
-    "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --watchAll",
     "eject": "react-scripts eject"
