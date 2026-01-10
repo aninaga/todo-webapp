@@ -1,18 +1,22 @@
 /* eslint-disable no-nested-ternary */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import moment from 'moment';
-import { firebase } from '../firebase';
+import { firebase, getCurrentUserId } from '../firebase';
 import { collatedTasksExist } from '../helpers';
 
 export const useTasks = selectedProject => {
   const [tasks, setTasks] = useState([]);
   const [archivedTasks, setArchivedTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
+    const userId = getCurrentUserId();
+
     let unsubscribe = firebase
       .firestore()
       .collection('tasks')
-      .where('userId', '==', 'anijosh');
+      .where('userId', '==', userId);
 
     unsubscribe =
       selectedProject && !collatedTasksExist(selectedProject)
@@ -33,32 +37,51 @@ export const useTasks = selectedProject => {
         ...task.data(),
       }));
 
+      // Sort tasks by priority (1 = highest, 4 = lowest) and then by creation date
+      const sortTasks = (taskList) => {
+        return taskList.sort((a, b) => {
+          const priorityA = a.priority || 4;
+          const priorityB = b.priority || 4;
+          if (priorityA !== priorityB) {
+            return priorityA - priorityB;
+          }
+          return (b.createdAt || 0) - (a.createdAt || 0);
+        });
+      };
+
       setTasks(
-        selectedProject === 'NEXT_7'
-          ? newTasks.filter(
-              task =>
-                moment(task.date, 'DD-MM-YYYY').diff(moment(), 'days') <= 7 &&
-                task.archived !== true
-            )
-          : newTasks.filter(task => task.archived !== true)
+        sortTasks(
+          selectedProject === 'NEXT_7'
+            ? newTasks.filter(
+                task =>
+                  moment(task.date, 'DD/MM/YYYY').diff(moment(), 'days') <= 7 &&
+                  moment(task.date, 'DD/MM/YYYY').diff(moment(), 'days') >= 0 &&
+                  task.archived !== true
+              )
+            : newTasks.filter(task => task.archived !== true)
+        )
       );
-      setArchivedTasks(newTasks.filter(task => task.archived !== false));
+      setArchivedTasks(newTasks.filter(task => task.archived === true));
+      setLoading(false);
     });
 
     return () => unsubscribe();
   }, [selectedProject]);
 
-  return { tasks, archivedTasks };
+  return { tasks, archivedTasks, loading };
 };
 
 export const useProjects = () => {
   const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchProjects = useCallback(() => {
+    const userId = getCurrentUserId();
+
     firebase
       .firestore()
       .collection('projects')
-      .where('userId', '==', 'anijosh')
+      .where('userId', '==', userId)
       .orderBy('projectId')
       .get()
       .then(snapshot => {
@@ -66,12 +89,14 @@ export const useProjects = () => {
           ...project.data(),
           docId: project.id,
         }));
-
-        if (JSON.stringify(allProjects) !== JSON.stringify(projects)) {
-          setProjects(allProjects);
-        }
+        setProjects(allProjects);
+        setLoading(false);
       });
-  }, [projects]);
+  }, []);
 
-  return { projects, setProjects };
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
+
+  return { projects, setProjects, loading, refetchProjects: fetchProjects };
 };

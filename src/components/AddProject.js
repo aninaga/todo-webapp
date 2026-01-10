@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { firebase } from '../firebase';
+import { firebase, getCurrentUserId } from '../firebase';
 import { generatePushId } from '../helpers';
 import { useProjectsValue } from '../context';
 
@@ -19,7 +19,7 @@ export const AddProject = ({ shouldShow = false }) => {
       .add({
         projectId,
         name: projectName,
-        userId: 'anijosh',
+        userId: getCurrentUserId(),
       })
       .then(() => {
         setProjects([...projects]);
